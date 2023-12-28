@@ -1,2 +1,2 @@
-# cluster-pool
-Node.js Cluster Pool and Worker thread pool implementations
+# NovaPool
+NovaPool A fast, efficient Node.js Cluster Pool and Worker Thread Pool implementations
