@@ -1,0 +1,84 @@
+{
+  "name": "novapool",
+  "version": "0.0.1",
+  "description": "NovaPool A fast, efficient Node.js Cluster Pool and Worker Thread Pool implementations",
+  "main": "./build/index.js",
+  "exports": {
+    "types": "./typings/index.d.ts",
+    "import": "./build/esm-wrapper.mjs",
+    "require": "./build/src/index.js",
+    "prepare": "husky install"
+  },
+  "types": "./typings/index.d.ts",
+  "scripts": {
+    "build": "tsc && gen-esm-wrapper . build/esm-wrapper.mjs",
+    "lint": "standardx \"**/*.{ts,mjs,js,cjs}\" | snazzy",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diyorbekrustamjonov/piscina.git"
+  },
+  "keywords": [
+    "cluster",
+    "worker threads",
+    "thread pool",
+    "cluster pool"
+  ],
+  "author": "Diyorbek Rustamjonov <drustamjonov0919@gmail.com>",
+  "contributors": [],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "abort-controller": "^3.0.0",
+    "concat-stream": "^2.0.0",
+    "gen-esm-wrapper": "^1.1.1",
+    "snazzy": "^9.0.0",
+    "standardx": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.3.3"
+  },
+  "dependencies": {
+    "hdr-histogram-js": "^2.0.1",
+    "hdr-histogram-percentiles-obj": "^3.0.0",
+    "husky": "^8.0.3"
+  },
+  "optionalDependencies": {
+    "nice-napi": "^1.0.2"
+  },
+  "eslintConfig": {
+    "rules": {
+      "semi": [
+        "error",
+        "always"
+      ],
+      "no-unused-vars": "off",
+      "no-use-before-define": "off",
+      "no-unreachable-loop": "off",
+      "no-dupe-class-members": "off",
+      "@typescript-eslint/no-unused-vars": "error"
+    },
+    "globals": {
+      "SharedArrayBuffer": true,
+      "Atomics": true,
+      "AbortController": true,
+      "MessageChannel": true
+    }
+  },
+  "standardx": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint/eslint-plugin"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/diyorbekrustamjonov/novapool/issues"
+  },
+  "homepage": "https://github.com/diyorbekrustamjonov/novapool#readme",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  }
+}
