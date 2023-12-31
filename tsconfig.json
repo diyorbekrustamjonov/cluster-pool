@@ -20,6 +20,6 @@
   "paths": {
     "*": ["types/*"]
   },
-  "include": ["src/**/*.ts", "src/**/*.js"],
+  "include": ["src/**/*.ts", "src/**/*.js", "examples/**/*.ts", "examples/**/*.js"],
   "exclude": ["node_modules", "coverage"]
 }
