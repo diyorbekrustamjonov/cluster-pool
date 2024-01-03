@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { NovaPoolWorker } from '../interfaces/worker/worker';
+import { NovaPoolWorker } from '../interfaces';
 import { TaskInfo } from './task';
 import { MessagePort, receiveMessageOnPort } from 'worker_threads';
 import { RequestMessage, ResponseCallback, ResponseMessage } from '../interfaces';
@@ -22,9 +22,9 @@ abstract class AsynchronouslyCreatedResource {
     return this.onReadyListeners === null;
   }
 
-  onReady(fn: () => void): void {
+  public onReady(fn: () => void): void {
     if (this.onReadyListeners === null) {
-      fn(); // this resource is already ready
+      fn();
       return;
     }
     this.onReadyListeners.push(fn);
@@ -38,7 +38,7 @@ export class WorkerInfo extends AsynchronouslyCreatedResource {
   workerId: number;
   freeWorkerId: () => void;
   taskInfos: Map<number, TaskInfo>;
-  idleTimeout: NodeJS.Timeout | null = null; // eslint-disable-line no-undef
+  idleTimeout: NodeJS.Timeout | null = null;
   port: MessagePort;
   sharedBuffer: Int32Array;
   lastSeenResponseCount: number = 0;
@@ -64,7 +64,7 @@ export class WorkerInfo extends AsynchronouslyCreatedResource {
     this.sharedBuffer = new Int32Array(new SharedArrayBuffer(kFieldCount * Int32Array.BYTES_PER_ELEMENT));
   }
 
-  async destroy(timeout?: number): Promise<void> {
+  public async destroy(timeout?: number): Promise<void> {
     let resolve: () => void;
     let reject: (err: Error) => void;
 
@@ -93,37 +93,33 @@ export class WorkerInfo extends AsynchronouslyCreatedResource {
     return ret;
   }
 
-  clearIdleTimeout(): void {
+  public clearIdleTimeout(): void {
     if (this.idleTimeout !== null) {
       clearTimeout(this.idleTimeout);
       this.idleTimeout = null;
     }
   }
 
-  ref(): WorkerInfo {
+  public ref(): WorkerInfo {
     this.port.ref();
     return this;
   }
 
-  unref(): WorkerInfo {
-    // Note: Do not call ref()/unref() on the Worker itself since that may cause
-    // a hard crash, see https://github.com/nodejs/node/pull/33394.
+  public unref(): WorkerInfo {
     this.port.unref();
     return this;
   }
 
-  _handleResponse(message: ResponseMessage): void {
+  public _handleResponse(message: ResponseMessage): void {
     this.usedMemory = message.usedMemory;
     this.onMessage(message);
 
     if (this.taskInfos.size === 0) {
-      // No more tasks running on this Worker means it should not keep the
-      // process running.
       this.unref();
     }
   }
 
-  postTask(taskInfo: TaskInfo) {
+  public postTask(taskInfo: TaskInfo): void {
     assert(!this.taskInfos.has(taskInfo.taskId));
     const message: RequestMessage = {
       task: taskInfo.releaseTask(),
@@ -138,8 +134,6 @@ export class WorkerInfo extends AsynchronouslyCreatedResource {
       }
       this.port.postMessage(message, taskInfo.transferList);
     } catch (err) {
-      // This would mostly happen if e.g. message contains unserializable data
-      // or transferList is invalid.
       taskInfo.done(err);
       return;
     }
@@ -149,18 +143,11 @@ export class WorkerInfo extends AsynchronouslyCreatedResource {
     this.ref();
     this.clearIdleTimeout();
 
-    // Inform the worker that there are new messages posted, and wake it up
-    // if it is waiting for one.
     Atomics.add(this.sharedBuffer, kRequestCountField, 1);
     Atomics.notify(this.sharedBuffer, kRequestCountField, 1);
   }
 
-  processPendingMessages() {
-    // If we *know* that there are more messages than we have received using
-    // 'message' events yet, then try to load and handle them synchronously,
-    // without the need to wait for more expensive events on the event loop.
-    // This would usually break async tracking, but in our case, we already have
-    // the extra TaskInfo/AsyncResource layer that rectifies that situation.
+  public processPendingMessages(): void {
     const actualResponseCount = Atomics.load(this.sharedBuffer, kResponseCountField);
     if (actualResponseCount !== this.lastSeenResponseCount) {
       this.lastSeenResponseCount = actualResponseCount;
@@ -172,14 +159,13 @@ export class WorkerInfo extends AsynchronouslyCreatedResource {
     }
   }
 
-  isRunningAbortableTask(): boolean {
-    // If there are abortable tasks, we are running one at most per Worker.
+  public isRunningAbortableTask(): boolean {
     if (this.taskInfos.size !== 1) return false;
     const [[, task]] = this.taskInfos;
     return task.abortSignal !== null;
   }
 
-  currentUsage(): number {
+  public currentUsage(): number {
     if (this.isRunningAbortableTask()) return Infinity;
     return this.taskInfos.size;
   }

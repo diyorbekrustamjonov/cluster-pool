@@ -9,6 +9,6 @@ export interface NovaPoolPrivateData {
   workerId: number;
 }
 
-export type NovaPoolData = [NovaPoolPrivateData, any]; // [{ ... }, workerData]
+export type NovaPoolData = [NovaPoolPrivateData, any];
 
 export type ResponseCallback = (response: ResponseMessage) => void;
