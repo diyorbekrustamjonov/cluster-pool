@@ -30,41 +30,41 @@ export class TaskInfo extends AsyncResource implements Task {
   started: number;
   cancel: () => void;
 
-  constructor(
-    task: any,
-    transferList: TransferList,
-    filename: string,
-    name: string,
-    callback: TaskCallback,
-    abortSignal: AbortSignalEventTargetOrEventEmitter | null,
-    triggerAsyncId: number,
-    channel?: NovaPoolChannel
-  ) {
-    super(Symbols.Task.kTask.toString(), { requireManualDestroy: true, triggerAsyncId });
-    this.callback = callback;
-    this.task = task;
-    this.transferList = transferList;
+  constructor(params: {
+    task: any;
+    transferList: TransferList;
+    filename: string;
+    name: string;
+    callback: TaskCallback;
+    abortSignal: AbortSignalEventTargetOrEventEmitter | null;
+    triggerAsyncId: number;
+    channel?: NovaPoolChannel;
+  }) {
+    super(Symbols.Task.kTask.toString(), { requireManualDestroy: true, triggerAsyncId: params.triggerAsyncId });
+    this.callback = params.callback;
+    this.task = params.task;
+    this.transferList = params.transferList;
     this.cancel = (): void => this.callback(new CancelError(), null);
-    this.channel = channel;
+    this.channel = params.channel;
 
     // If the task is a Transferable returned by
     // Piscina.move(), then add it to the transferList
     // automatically
-    if (isMovable(task)) {
+    if (isMovable(this.task)) {
       // This condition should never be hit but typescript
       // complains if we dont do the check.
       /* istanbul ignore if */
       if (this.transferList == null) {
         this.transferList = [];
       }
-      this.transferList = this.transferList.concat(task[Symbols.Task.kTransferable]);
-      this.task = task[Symbols.Task.kValue];
+      this.transferList = this.transferList.concat(this.task[Symbols.Task.kTransferable]);
+      this.task = this.task[Symbols.Task.kValue];
     }
 
-    this.filename = filename;
-    this.name = name;
+    this.filename = params.filename;
+    this.name = params.name;
     this.taskId = taskIdCounter++;
-    this.abortSignal = abortSignal;
+    this.abortSignal = params.abortSignal;
     this.created = performance.now();
     this.started = 0;
   }
