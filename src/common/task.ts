@@ -16,19 +16,19 @@ import { CancelError } from '../errors/cancel-error';
 let taskIdCounter = 0;
 
 export class TaskInfo extends AsyncResource implements Task {
-  callback: TaskCallback;
-  task: any;
-  transferList: TransferList;
-  channel?: NovaPoolChannel;
-  filename: string;
-  name: string;
-  taskId: number;
-  abortSignal: AbortSignalEventTargetOrEventEmitter | null;
-  abortListener: (() => void) | null = null;
-  workerInfo: WorkerInfo | null = null;
-  created: number;
-  started: number;
-  cancel: () => void;
+  public callback: TaskCallback;
+  public task: any;
+  public transferList: TransferList;
+  public channel?: NovaPoolChannel;
+  public filename: string;
+  public name: string;
+  public taskId: number;
+  public abortSignal: AbortSignalEventTargetOrEventEmitter | null;
+  public abortListener: (() => void) | null = null;
+  public workerInfo: WorkerInfo | null = null;
+  public created: number;
+  public started: number;
+  public cancel: () => void;
 
   constructor(params: {
     task: any;
@@ -47,16 +47,8 @@ export class TaskInfo extends AsyncResource implements Task {
     this.cancel = (): void => this.callback(new CancelError(), null);
     this.channel = params.channel;
 
-    // If the task is a Transferable returned by
-    // Piscina.move(), then add it to the transferList
-    // automatically
     if (isMovable(this.task)) {
-      // This condition should never be hit but typescript
-      // complains if we dont do the check.
-      /* istanbul ignore if */
-      if (this.transferList == null) {
-        this.transferList = [];
-      }
+      this.transferList = this.transferList || [];
       this.transferList = this.transferList.concat(this.task[Symbols.Task.kTransferable]);
       this.task = this.task[Symbols.Task.kValue];
     }
@@ -76,10 +68,8 @@ export class TaskInfo extends AsyncResource implements Task {
   }
 
   public done(err: unknown | null, result?: any): void {
-    this.emitDestroy(); // `TaskInfo`s are used only once.
+    this.emitDestroy();
     this.runInAsyncScope(this.callback, null, err, result);
-    // If an abort signal was used, remove the listener from it when
-    // done to make sure we do not accidentally leak.
     if (this.abortSignal && this.abortListener) {
       if ('removeEventListener' in this.abortSignal && this.abortListener) {
         this.abortSignal.removeEventListener('abort', this.abortListener);
