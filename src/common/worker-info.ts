@@ -5,33 +5,7 @@ import { MessagePort, receiveMessageOnPort } from 'worker_threads';
 import { RequestMessage, ResponseCallback, ResponseMessage } from '../interfaces';
 import { kFieldCount, kRequestCountField, kResponseCountField } from '../constants';
 import { ThreadTerminationError } from '../errors/thread-termination';
-
-abstract class AsynchronouslyCreatedResource {
-  public onReadyListeners: (() => void)[] | null = [];
-
-  public markAsReady(): void {
-    const listeners = this.onReadyListeners;
-    assert(listeners !== null);
-    this.onReadyListeners = null;
-    for (const listener of listeners) {
-      listener();
-    }
-  }
-
-  public isReady(): boolean {
-    return this.onReadyListeners === null;
-  }
-
-  public onReady(fn: () => void): void {
-    if (this.onReadyListeners === null) {
-      fn();
-      return;
-    }
-    this.onReadyListeners.push(fn);
-  }
-
-  abstract currentUsage(): number;
-}
+import { AsynchronouslyCreatedResource } from '../pools/async-created-resource-pool';
 
 export class WorkerInfo extends AsynchronouslyCreatedResource {
   worker: NovaPoolWorker;
